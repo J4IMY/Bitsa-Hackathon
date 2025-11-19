@@ -6,6 +6,8 @@ import { MembershipBenefits } from "@/components/MembershipBenefits";
 import { Newsletter } from "@/components/Newsletter";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Event, BlogPost, GalleryImage } from "@shared/schema";
 import hackathonImage from "@assets/generated_images/Students_at_BITSA_hackathon_372741c9.png";
 import workshopImage from "@assets/generated_images/BITSA_technology_workshop_event_da22ab63.png";
 import heroImage from "@assets/generated_images/BITSA_students_collaborating_together_b50f10ca.png";
@@ -120,6 +122,24 @@ const mockGalleryImages = [
 ];
 
 export default function Home() {
+  // Fetch real data from APIs
+  const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
+    queryKey: ["/api/events"],
+  });
+
+  const { data: blogPosts = [], isLoading: postsLoading } = useQuery<BlogPost[]>({
+    queryKey: ["/api/blog"],
+  });
+
+  const { data: galleryImages = [], isLoading: galleryLoading } = useQuery<GalleryImage[]>({
+    queryKey: ["/api/gallery"],
+  });
+
+  // Use real data if available, otherwise fallback to mock data
+  const displayEvents = events.length > 0 ? events.slice(0, 3) : mockEvents;
+  const displayPosts = blogPosts.length > 0 ? blogPosts.slice(0, 3) : mockBlogPosts;
+  const displayImages = galleryImages.length > 0 ? galleryImages.slice(0, 6) : mockGalleryImages;
+
   return (
     <div className="min-h-screen">
       <Hero />
@@ -142,11 +162,23 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {mockEvents.map((event) => (
-              <EventCard key={event.id} {...event} />
-            ))}
-          </div>
+          {eventsLoading ? (
+            <div className="text-center py-8">Loading events...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {displayEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  title={event.title}
+                  date={event.date.toString()}
+                  time={event.time}
+                  location={event.location}
+                  attendeeCount={event.attendeeCount || "0"}
+                  imageUrl={event.imageUrl || undefined}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -168,11 +200,24 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {mockBlogPosts.map((post) => (
-              <BlogCard key={post.id} {...post} />
-            ))}
-          </div>
+          {postsLoading ? (
+            <div className="text-center py-8">Loading blog posts...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {displayPosts.map((post) => (
+                <BlogCard
+                  key={post.id}
+                  title={post.title}
+                  excerpt={post.excerpt}
+                  category={post.category}
+                  imageUrl={post.imageUrl || undefined}
+                  authorName="BITSA Team"
+                  publishedAt={post.publishedAt.toString()}
+                  slug={post.slug}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -194,11 +239,21 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-            {mockGalleryImages.map((image) => (
-              <GalleryCard key={image.id} {...image} />
-            ))}
-          </div>
+          {galleryLoading ? (
+            <div className="text-center py-8">Loading gallery...</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+              {displayImages.map((image) => (
+                <GalleryCard
+                  key={image.id}
+                  imageUrl={image.imageUrl}
+                  title={image.title}
+                  caption={image.caption || undefined}
+                  uploadedAt={image.uploadedAt.toString()}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

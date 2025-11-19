@@ -3,11 +3,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { BlogPost } from "@shared/schema";
 import hackathonImage from "@assets/generated_images/Students_at_BITSA_hackathon_372741c9.png";
 import workshopImage from "@assets/generated_images/BITSA_technology_workshop_event_da22ab63.png";
 import heroImage from "@assets/generated_images/BITSA_students_collaborating_together_b50f10ca.png";
 
-// todo: remove mock functionality
 const mockBlogPosts = [
   {
     id: "1",
@@ -77,7 +78,13 @@ export default function Blog() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const filteredPosts = mockBlogPosts.filter((post) => {
+  const { data: blogPosts = [], isLoading } = useQuery<BlogPost[]>({
+    queryKey: ["/api/blog"],
+  });
+
+  const displayPosts = blogPosts.length > 0 ? blogPosts : mockBlogPosts;
+
+  const filteredPosts = displayPosts.filter((post) => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
@@ -125,18 +132,33 @@ export default function Blog() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {filteredPosts.map((post) => (
-            <BlogCard key={post.id} {...post} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-8">Loading blog posts...</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {filteredPosts.map((post) => (
+                <BlogCard 
+                  key={post.id} 
+                  title={post.title}
+                  excerpt={post.excerpt}
+                  category={post.category}
+                  imageUrl={post.imageUrl || undefined}
+                  authorName="BITSA Team"
+                  publishedAt={post.publishedAt.toString()}
+                  slug={post.slug}
+                />
+              ))}
+            </div>
 
-        {filteredPosts.length === 0 && (
-          <div className="text-center py-16 border-2 rounded-md">
-            <p className="text-muted-foreground" data-testid="text-no-posts">
-              No blog posts found matching your criteria.
-            </p>
-          </div>
+            {filteredPosts.length === 0 && (
+              <div className="text-center py-16 border-2 rounded-md">
+                <p className="text-muted-foreground" data-testid="text-no-posts">
+                  No blog posts found matching your criteria.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

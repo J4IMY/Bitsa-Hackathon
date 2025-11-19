@@ -1,11 +1,12 @@
 import { GalleryCard } from "@/components/GalleryCard";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { GalleryImage } from "@shared/schema";
 import hackathonImage from "@assets/generated_images/Students_at_BITSA_hackathon_372741c9.png";
 import workshopImage from "@assets/generated_images/BITSA_technology_workshop_event_da22ab63.png";
 import heroImage from "@assets/generated_images/BITSA_students_collaborating_together_b50f10ca.png";
 
-// todo: remove mock functionality
 const mockGalleryImages = [
   {
     id: "1",
@@ -86,7 +87,13 @@ const categories = ["All", "Hackathons", "Workshops", "Meetups"];
 export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const filteredImages = mockGalleryImages.filter(
+  const { data: galleryImages = [], isLoading } = useQuery<GalleryImage[]>({
+    queryKey: ["/api/gallery"],
+  });
+
+  const displayImages = galleryImages.length > 0 ? galleryImages : mockGalleryImages;
+
+  const filteredImages = displayImages.filter(
     (image) => selectedCategory === "All" || image.category === selectedCategory
   );
 
@@ -118,18 +125,30 @@ export default function Gallery() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {filteredImages.map((image) => (
-            <GalleryCard key={image.id} {...image} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-8">Loading gallery...</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {filteredImages.map((image) => (
+                <GalleryCard 
+                  key={image.id} 
+                  imageUrl={image.imageUrl}
+                  title={image.title}
+                  caption={image.caption || undefined}
+                  uploadedAt={image.uploadedAt.toString()}
+                />
+              ))}
+            </div>
 
-        {filteredImages.length === 0 && (
-          <div className="text-center py-16 border-2 rounded-md">
-            <p className="text-muted-foreground" data-testid="text-no-images">
-              No images found in this category.
-            </p>
-          </div>
+            {filteredImages.length === 0 && (
+              <div className="text-center py-16 border-2 rounded-md">
+                <p className="text-muted-foreground" data-testid="text-no-images">
+                  No images found in this category.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

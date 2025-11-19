@@ -1,12 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "./ThemeToggle";
-import { Menu, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 
 export function Header() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -15,6 +18,10 @@ export function Header() {
     { href: "/gallery", label: "Gallery" },
     { href: "/contact", label: "Contact" },
   ];
+
+  if (isAuthenticated && user?.isAdmin) {
+    navItems.push({ href: "/admin", label: "Admin" });
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -47,12 +54,51 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="sm" data-testid="button-login" className="hidden sm:flex">
-            Login
-          </Button>
-          <Button size="sm" data-testid="button-register" className="hidden sm:flex">
-            Register
-          </Button>
+          
+          {!isLoading && !isAuthenticated && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="button-login"
+                className="hidden sm:flex"
+                onClick={() => window.location.href = "/api/login"}
+              >
+                Login
+              </Button>
+              <Button
+                size="sm"
+                data-testid="button-register"
+                className="hidden sm:flex"
+                onClick={() => window.location.href = "/api/login"}
+              >
+                Register
+              </Button>
+            </>
+          )}
+
+          {isAuthenticated && user && (
+            <div className="hidden sm:flex items-center gap-2">
+              <Avatar className="h-8 w-8 border">
+                <AvatarImage src={user.profileImageUrl || undefined} />
+                <AvatarFallback>
+                  {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium" data-testid="text-user-name">
+                {user.firstName || user.email}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid="button-logout"
+                onClick={() => window.location.href = "/api/logout"}
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
           <Button
             variant="ghost"
@@ -84,14 +130,50 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <div className="flex gap-2 pt-2 border-t">
-              <Button variant="ghost" size="sm" className="flex-1" data-testid="button-mobile-login">
-                Login
-              </Button>
-              <Button size="sm" className="flex-1" data-testid="button-mobile-register">
-                Register
-              </Button>
-            </div>
+            {!isLoading && !isAuthenticated && (
+              <div className="flex gap-2 pt-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1"
+                  data-testid="button-mobile-login"
+                  onClick={() => window.location.href = "/api/login"}
+                >
+                  Login
+                </Button>
+                <Button
+                  size="sm"
+                  className="flex-1"
+                  data-testid="button-mobile-register"
+                  onClick={() => window.location.href = "/api/login"}
+                >
+                  Register
+                </Button>
+              </div>
+            )}
+
+            {isAuthenticated && user && (
+              <div className="flex items-center gap-2 pt-2 border-t">
+                <Avatar className="h-8 w-8 border">
+                  <AvatarImage src={user.profileImageUrl || undefined} />
+                  <AvatarFallback>
+                    {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium flex-1" data-testid="text-mobile-user-name">
+                  {user.firstName || user.email}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  data-testid="button-mobile-logout"
+                  onClick={() => window.location.href = "/api/logout"}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            )}
           </nav>
         </div>
       )}

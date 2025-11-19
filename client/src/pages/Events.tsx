@@ -2,11 +2,12 @@ import { EventCard } from "@/components/EventCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Event } from "@shared/schema";
 import hackathonImage from "@assets/generated_images/Students_at_BITSA_hackathon_372741c9.png";
 import workshopImage from "@assets/generated_images/BITSA_technology_workshop_event_da22ab63.png";
 import heroImage from "@assets/generated_images/BITSA_students_collaborating_together_b50f10ca.png";
 
-// todo: remove mock functionality
 const mockEvents = [
   {
     id: "1",
@@ -67,7 +68,13 @@ const mockEvents = [
 export default function Events() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredEvents = mockEvents.filter((event) =>
+  const { data: events = [], isLoading } = useQuery<Event[]>({
+    queryKey: ["/api/events"],
+  });
+
+  const displayEvents = events.length > 0 ? events : mockEvents;
+
+  const filteredEvents = displayEvents.filter((event) =>
     event.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -96,18 +103,32 @@ export default function Events() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {filteredEvents.map((event) => (
-            <EventCard key={event.id} {...event} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-8">Loading events...</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {filteredEvents.map((event) => (
+                <EventCard 
+                  key={event.id} 
+                  title={event.title}
+                  date={event.date.toString()}
+                  time={event.time}
+                  location={event.location}
+                  attendeeCount={event.attendeeCount || "0"}
+                  imageUrl={event.imageUrl || undefined}
+                />
+              ))}
+            </div>
 
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-16 border-2 rounded-md">
-            <p className="text-muted-foreground" data-testid="text-no-events">
-              No events found matching your search.
-            </p>
-          </div>
+            {filteredEvents.length === 0 && (
+              <div className="text-center py-16 border-2 rounded-md">
+                <p className="text-muted-foreground" data-testid="text-no-events">
+                  No events found matching your search.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
