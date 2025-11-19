@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";
+import presidentImage from "@assets/generated_images/BITSA_President_professional_portrait_b7a70d56.png";
+import vpImage from "@assets/generated_images/BITSA_Vice_President_portrait_fa1bcf0d.png";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -34,6 +37,82 @@ export default function Contact() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold mb-8 text-center" data-testid="text-leadership-title">
+            Meet Our Leadership
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="p-6 border-2">
+              <div className="flex flex-col items-center text-center">
+                <Avatar className="h-32 w-32 mb-4 border-4 border-primary/20">
+                  <AvatarImage src={presidentImage} alt="BITSA President" />
+                  <AvatarFallback>PR</AvatarFallback>
+                </Avatar>
+                <h3 className="text-xl font-bold mb-1" data-testid="text-president-name">
+                  John Kamau
+                </h3>
+                <p className="text-sm text-primary font-semibold mb-4" data-testid="text-president-title">
+                  President
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4" data-testid="text-president-bio">
+                  A passionate tech leader with 3 years of experience in software development. John is dedicated to fostering innovation and collaboration within the BITSA community. He specializes in full-stack development and has led multiple successful hackathon projects.
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span data-testid="text-president-phone">+254 712 345 678</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <a 
+                      href="mailto:president@bitsa.com" 
+                      className="hover:text-primary transition-colors"
+                      data-testid="link-president-email"
+                    >
+                      president@bitsa.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border-2">
+              <div className="flex flex-col items-center text-center">
+                <Avatar className="h-32 w-32 mb-4 border-4 border-primary/20">
+                  <AvatarImage src={vpImage} alt="BITSA Vice President" />
+                  <AvatarFallback>VP</AvatarFallback>
+                </Avatar>
+                <h3 className="text-xl font-bold mb-1" data-testid="text-vp-name">
+                  Grace Wanjiru
+                </h3>
+                <p className="text-sm text-primary font-semibold mb-4" data-testid="text-vp-title">
+                  Vice President
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4" data-testid="text-vp-bio">
+                  An experienced organizer and tech enthusiast focused on creating inclusive learning environments. Grace coordinates BITSA events and workshops, ensuring every member has opportunities to grow. She has expertise in UI/UX design and community building.
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span data-testid="text-vp-phone">+254 723 456 789</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <a 
+                      href="mailto:vp@bitsa.com" 
+                      className="hover:text-primary transition-colors"
+                      data-testid="link-vp-email"
+                    >
+                      vp@bitsa.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
           <div>
             <h2 className="text-2xl font-bold mb-6" data-testid="text-get-in-touch">
