@@ -39,6 +39,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Form,
   FormControl,
   FormField,
@@ -51,6 +58,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 // Form schemas
 const blogPostFormSchema = insertBlogPostSchema.extend({
@@ -430,10 +438,16 @@ export default function Admin() {
   };
 
   const handleEventSubmit = (data: EventFormData) => {
+    // Convert date to proper Date object if it's a string
+    const eventData = {
+      ...data,
+      date: data.date instanceof Date ? data.date : new Date(data.date),
+    };
+
     if (editingEvent) {
-      updateEventMutation.mutate({ id: editingEvent.id, data });
+      updateEventMutation.mutate({ id: editingEvent.id, data: eventData });
     } else {
-      createEventMutation.mutate(data);
+      createEventMutation.mutate(eventData);
     }
   };
 
@@ -806,7 +820,12 @@ export default function Admin() {
                   <FormItem>
                     <FormLabel>Content</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={8} data-testid="input-blog-content" />
+                      <RichTextEditor
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Write your blog post content here..."
+                        className="min-h-[300px]"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -819,7 +838,14 @@ export default function Admin() {
                   <FormItem>
                     <FormLabel>Image URL (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} data-testid="input-blog-imageUrl" />
+                      <Input
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value ?? ""}
+                        data-testid="input-blog-imageUrl"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -915,15 +941,90 @@ export default function Admin() {
                 <FormField
                   control={eventForm.control}
                   name="time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Time</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g., 2:00 PM" data-testid="input-event-time" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    // Helper to safely parse time
+                    const parseTime = (value: string) => {
+                      if (!value) return { h: "", m: "" };
+                      const parts = value.split(':');
+                      if (parts.length < 2) return { h: "", m: "" };
+
+                      let h = parts[0];
+                      let m = parts[1];
+
+                      // Validate hour (must be 00-23)
+                      if (!/^[0-2][0-9]$/.test(h)) {
+                        // Try to fix single digit
+                        if (/^[0-9]$/.test(h)) h = h.padStart(2, '0');
+                        else h = ""; // Invalid
+                      }
+
+                      // Validate minute (must be 00, 05, ... 55)
+                      // We only check if it's 2 digits for now to allow custom times if they exist,
+                      // but for the Select value we need exact matches.
+                      // If it's not a valid step, the Select will show placeholder, which is fine.
+                      // But we want to ensure we don't preserve garbage when changing one part.
+
+                      return { h, m };
+                    };
+
+                    const { h: currentHours, m: currentMinutes } = parseTime(field.value);
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Time</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={currentHours}
+                              onValueChange={(val) => {
+                                // If minutes is invalid/empty, default to 00
+                                const safeMinutes = /^[0-5][0-9]$/.test(currentMinutes) ? currentMinutes : "00";
+                                field.onChange(`${val}:${safeMinutes}`);
+                              }}
+                            >
+                              <SelectTrigger className="w-[120px]" data-testid="select-event-hour">
+                                <SelectValue placeholder="Hour" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 24 }).map((_, i) => {
+                                  const val = i.toString().padStart(2, '0');
+                                  return (
+                                    <SelectItem key={i} value={val}>
+                                      {val}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                            <span className="text-xl font-bold">:</span>
+                            <Select
+                              value={currentMinutes}
+                              onValueChange={(val) => {
+                                // If hours is invalid/empty, default to 12
+                                const safeHours = /^[0-2][0-9]$/.test(currentHours) ? currentHours : "12";
+                                field.onChange(`${safeHours}:${val}`);
+                              }}
+                            >
+                              <SelectTrigger className="w-[120px]" data-testid="select-event-minute">
+                                <SelectValue placeholder="Minute" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 12 }).map((_, i) => {
+                                  const val = (i * 5).toString().padStart(2, '0');
+                                  return (
+                                    <SelectItem key={i} value={val}>
+                                      {val}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
               <FormField
@@ -959,7 +1060,14 @@ export default function Admin() {
                   <FormItem>
                     <FormLabel>Image URL (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} data-testid="input-event-imageUrl" />
+                      <Input
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value ?? ""}
+                        data-testid="input-event-imageUrl"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1027,7 +1135,14 @@ export default function Admin() {
                   <FormItem>
                     <FormLabel>Image URL</FormLabel>
                     <FormControl>
-                      <Input {...field} data-testid="input-gallery-imageUrl" />
+                      <Input
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value || ""}
+                        data-testid="input-gallery-imageUrl"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1040,7 +1155,15 @@ export default function Admin() {
                   <FormItem>
                     <FormLabel>Caption (optional)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={3} data-testid="input-gallery-caption" />
+                      <Textarea
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value || ""}
+                        rows={3}
+                        data-testid="input-gallery-caption"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1053,7 +1176,14 @@ export default function Admin() {
                   <FormItem>
                     <FormLabel>Category (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} data-testid="input-gallery-category" />
+                      <Input
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value || ""}
+                        data-testid="input-gallery-category"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1078,8 +1208,8 @@ export default function Admin() {
                 >
                   {(createGalleryImageMutation.isPending ||
                     updateGalleryImageMutation.isPending) && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  )}
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    )}
                   {editingGalleryImage ? "Update" : "Create"}
                 </Button>
               </DialogFooter>

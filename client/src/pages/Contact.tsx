@@ -41,7 +41,7 @@ export default function Contact() {
           <h2 className="text-3xl font-bold mb-8 text-center" data-testid="text-leadership-title">
             Meet Our Leadership
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card className="p-6 border-2">
               <div className="flex flex-col items-center text-center">
@@ -65,8 +65,8 @@ export default function Contact() {
                   </div>
                   <div className="flex items-center justify-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" />
-                    <a 
-                      href="mailto:president@bitsa.com" 
+                    <a
+                      href="mailto:president@bitsa.com"
                       className="hover:text-primary transition-colors"
                       data-testid="link-president-email"
                     >
@@ -99,8 +99,8 @@ export default function Contact() {
                   </div>
                   <div className="flex items-center justify-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" />
-                    <a 
-                      href="mailto:vp@bitsa.com" 
+                    <a
+                      href="mailto:vp@bitsa.com"
                       className="hover:text-primary transition-colors"
                       data-testid="link-vp-email"
                     >
@@ -146,10 +146,10 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Phone</h3>
                     <p className="text-muted-foreground mb-1" data-testid="text-contact-president">
-                      President: +254 XXX XXX XXX
+                      President: +254 712 345 678
                     </p>
                     <p className="text-muted-foreground" data-testid="text-contact-vp">
-                      Vice President: +254 XXX XXX XXX
+                      Vice President: +254 723 456 789
                     </p>
                   </div>
                 </div>

@@ -35,7 +35,8 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: sessionTtl,
     },
   });
@@ -69,6 +70,49 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  passport.serializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+
+  const isLocal = !process.env.REPL_ID || process.env.REPL_ID === 'local';
+
+  if (isLocal) {
+    app.get("/api/login", (req, res) => {
+      const user = {
+        claims: {
+          sub: "local-admin-id",
+          email: "admin@local.com",
+          first_name: "Local",
+          last_name: "Admin",
+          profile_image_url: "https://placehold.co/100",
+          exp: Math.floor(Date.now() / 1000) + 3600 * 24, // 1 day
+        },
+        expires_at: Math.floor(Date.now() / 1000) + 3600 * 24,
+        refresh_token: "local-refresh-token", // Dummy token
+      };
+      req.login(user, async (err) => {
+        if (err) return res.status(500).json({ message: "Login failed" });
+
+        await storage.upsertUser({
+          id: "local-admin-id",
+          email: "admin@local.com",
+          firstName: "Local",
+          lastName: "Admin",
+          profileImageUrl: "https://placehold.co/100",
+          isAdmin: true,
+        });
+
+        res.redirect("/");
+      });
+    });
+
+    app.get("/api/logout", (req, res) => {
+      req.logout(() => {
+        res.redirect("/");
+      });
+    });
+    return;
+  }
+
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -101,9 +145,6 @@ export async function setupAuth(app: Express) {
       registeredStrategies.add(strategyName);
     }
   };
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
@@ -149,6 +190,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (!refreshToken) {
     res.status(401).json({ message: "Unauthorized" });
     return;
+  }
+
+  if (refreshToken === "local-refresh-token") {
+    return next();
   }
 
   try {

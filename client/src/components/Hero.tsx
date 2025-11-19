@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import heroImage from "@assets/generated_images/BITSA_students_collaborating_together_b50f10ca.png";
 
 export function Hero() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <section className="relative min-h-[60vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden border-4">
       <div
@@ -18,21 +22,37 @@ export function Hero() {
           Join a vibrant community of tech enthusiasts, innovators, and future IT leaders
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button
-            size="lg"
-            className="bg-primary/90 backdrop-blur-md border border-primary-border hover:bg-primary"
-            data-testid="button-register-now"
-          >
-            Register Now
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="bg-background/20 backdrop-blur-md border-white/30 text-white hover:bg-background/30"
-            data-testid="button-view-events"
-          >
-            View Events
-          </Button>
+          {!isAuthenticated ? (
+            <Link href="/auth">
+              <Button
+                size="lg"
+                className="bg-primary/90 backdrop-blur-md border border-primary-border hover:bg-primary"
+                data-testid="button-register-now"
+              >
+                Register Now
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/events">
+              <Button
+                size="lg"
+                className="bg-primary/90 backdrop-blur-md border border-primary-border hover:bg-primary"
+                data-testid="button-my-events"
+              >
+                My Events
+              </Button>
+            </Link>
+          )}
+          <Link href="/events">
+            <Button
+              size="lg"
+              variant="outline"
+              className="bg-background/20 backdrop-blur-md border-white/30 text-white hover:bg-background/30"
+              data-testid="button-view-events"
+            >
+              View Events
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

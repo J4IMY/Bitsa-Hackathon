@@ -3,7 +3,6 @@ import { EventCard } from "@/components/EventCard";
 import { BlogCard } from "@/components/BlogCard";
 import { GalleryCard } from "@/components/GalleryCard";
 import { MembershipBenefits } from "@/components/MembershipBenefits";
-import { Newsletter } from "@/components/Newsletter";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -166,18 +165,19 @@ export default function Home() {
             <div className="text-center py-8">Loading events...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {displayEvents.map((event) => (
-                <EventCard
-                  key={event.id}
-                  title={event.title}
-                  date={event.date.toString()}
-                  time={event.time}
-                  location={event.location}
-                  attendeeCount={event.attendeeCount || "0"}
-                  imageUrl={event.imageUrl || undefined}
-                />
-              ))}
-            </div>
+              {displayEvents.slice(0, 3).map((event) => (
+                <div key={event.id}>
+                  <EventCard
+                    id={event.id}
+                    title={event.title}
+                    date={event.date.toString()}
+                    time={event.time}
+                    location={event.location}
+                    attendeeCount={event.attendeeCount || "0"}
+                    imageUrl={event.imageUrl || undefined}
+                  />
+                </div>
+              ))}</div>
           )}
         </div>
       </section>
@@ -258,8 +258,6 @@ export default function Home() {
       </section>
 
       <MembershipBenefits />
-
-      <Newsletter />
     </div>
   );
 }

@@ -12,15 +12,22 @@ import {
   blogPosts,
   events,
   galleryImages,
+  eventRegistrations,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: UpsertUser): Promise<User>;
+  updateUserPassword(id: string, password: string): Promise<void>;
+  updateUserProfile(id: string, profileData: Partial<UpsertUser>): Promise<User | undefined>;
+  setResetToken(email: string, token: string, expiry: Date): Promise<void>;
+  verifyResetToken(token: string): Promise<User | undefined>;
+
   // Blog post operations
   getAllBlogPosts(): Promise<BlogPost[]>;
   getBlogPost(id: string): Promise<BlogPost | undefined>;
@@ -28,20 +35,26 @@ export interface IStorage {
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: string, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
   deleteBlogPost(id: string): Promise<void>;
-  
+
   // Event operations
   getAllEvents(): Promise<Event[]>;
   getEvent(id: string): Promise<Event | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<void>;
-  
+
   // Gallery operations
   getAllGalleryImages(): Promise<GalleryImage[]>;
   getGalleryImage(id: string): Promise<GalleryImage | undefined>;
   createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage>;
   updateGalleryImage(id: string, image: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined>;
   deleteGalleryImage(id: string): Promise<void>;
+
+  // Event registration operations
+  registerForEvent(eventId: string, userId: string): Promise<void>;
+  unregisterFromEvent(eventId: string, userId: string): Promise<void>;
+  isUserRegisteredForEvent(eventId: string, userId: string): Promise<boolean>;
+  getEventRegistrationCount(eventId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -63,6 +76,74 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .returning();
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUserPassword(id: string, password: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        password,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id));
+  }
+
+  async updateUserProfile(id: string, profileData: Partial<UpsertUser>): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({
+        ...profileData,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async setResetToken(email: string, token: string, expiry: Date): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        resetToken: token,
+        resetTokenExpiry: expiry,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.email, email));
+  }
+
+  async verifyResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.resetToken, token));
+
+    if (!user || !user.resetTokenExpiry) {
+      return undefined;
+    }
+
+    // Check if token is expired
+    if (new Date() > user.resetTokenExpiry) {
+      return undefined;
+    }
+
     return user;
   }
 
@@ -153,6 +234,53 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGalleryImage(id: string): Promise<void> {
     await db.delete(galleryImages).where(eq(galleryImages.id, id));
+  }
+
+  // Event registration operations
+  async registerForEvent(eventId: string, userId: string): Promise<void> {
+    try {
+      await db.insert(eventRegistrations).values({
+        eventId,
+        userId,
+      });
+    } catch (error: any) {
+      // If unique constraint violation, user is already registered
+      if (error.code === '23505') {
+        throw new Error("You are already registered for this event");
+      }
+      throw error;
+    }
+  }
+
+  async unregisterFromEvent(eventId: string, userId: string): Promise<void> {
+    await db.delete(eventRegistrations).where(
+      and(
+        eq(eventRegistrations.eventId, eventId),
+        eq(eventRegistrations.userId, userId)
+      )
+    );
+  }
+
+  async isUserRegisteredForEvent(eventId: string, userId: string): Promise<boolean> {
+    const [registration] = await db
+      .select()
+      .from(eventRegistrations)
+      .where(
+        and(
+          eq(eventRegistrations.eventId, eventId),
+          eq(eventRegistrations.userId, userId)
+        )
+      )
+      .limit(1);
+    return !!registration;
+  }
+
+  async getEventRegistrationCount(eventId: string): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.eventId, eventId));
+    return result[0]?.count || 0;
   }
 }
 

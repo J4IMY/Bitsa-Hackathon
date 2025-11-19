@@ -109,8 +109,9 @@ export default function Events() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredEvents.map((event) => (
-                <EventCard 
-                  key={event.id} 
+                <EventCard
+                  key={event.id}
+                  id={event.id}
                   title={event.title}
                   date={event.date.toString()}
                   time={event.time}

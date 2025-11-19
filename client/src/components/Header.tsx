@@ -1,9 +1,17 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, User as UserIcon } from "lucide-react";
 import { useState } from "react";
 
 export function Header() {
@@ -39,11 +47,10 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location === item.href
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                }`}
+                className={`text-sm font-medium transition-colors hover:text-primary ${location === item.href
+                  ? "text-foreground"
+                  : "text-muted-foreground"
+                  }`}
                 data-testid={`link-nav-${item.label.toLowerCase()}`}
               >
                 {item.label}
@@ -54,49 +61,66 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          
+
           {!isLoading && !isAuthenticated && (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                data-testid="button-login"
-                className="hidden sm:flex"
-                onClick={() => window.location.href = "/api/login"}
-              >
-                Login
-              </Button>
-              <Button
-                size="sm"
-                data-testid="button-register"
-                className="hidden sm:flex"
-                onClick={() => window.location.href = "/api/login"}
-              >
-                Register
-              </Button>
+              <Link href="/auth">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  data-testid="button-login"
+                  className="hidden sm:flex"
+                >
+                  Login
+                </Button>
+              </Link>
+              <Link href="/auth">
+                <Button
+                  size="sm"
+                  data-testid="button-register"
+                  className="hidden sm:flex"
+                >
+                  Register
+                </Button>
+              </Link>
             </>
           )}
 
           {isAuthenticated && user && (
             <div className="hidden sm:flex items-center gap-2">
-              <Avatar className="h-8 w-8 border">
-                <AvatarImage src={user.profileImageUrl || undefined} />
-                <AvatarFallback>
-                  {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium" data-testid="text-user-name">
-                {user.firstName || user.email}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                data-testid="button-logout"
-                onClick={() => window.location.href = "/api/logout"}
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2" data-testid="button-user-menu">
+                    <Avatar className="h-8 w-8 border">
+                      <AvatarImage src={user.profileImageUrl || undefined} />
+                      <AvatarFallback>
+                        {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium" data-testid="text-user-name">
+                      {user.firstName || user.email}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center cursor-pointer">
+                      <UserIcon className="h-4 w-4 mr-2" />
+                      Profile Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => window.location.href = "/api/logout"}
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
 
@@ -119,11 +143,10 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
-                  location === item.href
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground"
-                }`}
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${location === item.href
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground"
+                  }`}
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid={`link-mobile-${item.label.toLowerCase()}`}
               >
@@ -132,40 +155,56 @@ export function Header() {
             ))}
             {!isLoading && !isAuthenticated && (
               <div className="flex gap-2 pt-2 border-t">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex-1"
-                  data-testid="button-mobile-login"
-                  onClick={() => window.location.href = "/api/login"}
-                >
-                  Login
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  data-testid="button-mobile-register"
-                  onClick={() => window.location.href = "/api/login"}
-                >
-                  Register
-                </Button>
+                <Link href="/auth" className="flex-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    data-testid="button-mobile-login"
+                  >
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/auth" className="flex-1">
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    data-testid="button-mobile-register"
+                  >
+                    Register
+                  </Button>
+                </Link>
               </div>
             )}
 
             {isAuthenticated && user && (
-              <div className="flex items-center gap-2 pt-2 border-t">
-                <Avatar className="h-8 w-8 border">
-                  <AvatarImage src={user.profileImageUrl || undefined} />
-                  <AvatarFallback>
-                    {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium flex-1" data-testid="text-mobile-user-name">
-                  {user.firstName || user.email}
-                </span>
+              <div className="flex flex-col gap-2 pt-2 border-t">
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <Avatar className="h-8 w-8 border">
+                    <AvatarImage src={user.profileImageUrl || undefined} />
+                    <AvatarFallback>
+                      {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium flex-1" data-testid="text-mobile-user-name">
+                    {user.firstName || user.email}
+                  </span>
+                </div>
+                <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    data-testid="button-mobile-profile"
+                  >
+                    <UserIcon className="h-4 w-4 mr-2" />
+                    Profile Settings
+                  </Button>
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="w-full justify-start text-destructive hover:text-destructive"
                   data-testid="button-mobile-logout"
                   onClick={() => window.location.href = "/api/logout"}
                 >
