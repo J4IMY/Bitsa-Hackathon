@@ -6,6 +6,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertBlogPostSchema, insertEventSchema, insertGalleryImageSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { discussionsRouter } from "./routes/discussions";
 
 // Middleware to check if user is admin
 const isAdmin = async (req: any, res: any, next: any) => {
@@ -25,6 +26,9 @@ const isAdmin = async (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Register discussion routes
+  app.use("/api/discussions", discussionsRouter);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

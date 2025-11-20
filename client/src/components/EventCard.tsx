@@ -8,16 +8,48 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+/**
+ * Props for the EventCard component.
+ */
 interface EventCardProps {
+  /** Unique identifier for the event */
   id: string;
+  /** Title of the event */
   title: string;
+  /** Date string of the event */
   date: string;
+  /** Time string of the event */
   time: string;
+  /** Location where the event will take place */
   location: string;
+  /** Current number of attendees */
   attendeeCount: string;
+  /** Optional URL for the event image */
   imageUrl?: string;
 }
 
+/**
+ * Response structure for registration status API
+ */
+interface RegistrationStatusResponse {
+  isRegistered: boolean;
+  attendeeCount: number;
+}
+
+/**
+ * Response structure for register/unregister mutation
+ */
+interface RegisterResponse {
+  message: string;
+  attendeeCount: number;
+}
+
+/**
+ * EventCard Component
+ * 
+ * Displays a card with event details and allows users to register/unregister for the event.
+ * Handles real-time attendee count updates and user authentication checks.
+ */
 export function EventCard({
   id,
   title,
@@ -36,7 +68,8 @@ export function EventCard({
   const month = dateObj.toLocaleString("default", { month: "short" });
 
   // Fetch registration status if authenticated
-  const { data: registrationStatus } = useQuery({
+  // This query checks if the current user is already registered for this specific event
+  const { data: registrationStatus } = useQuery<RegistrationStatusResponse>({
     queryKey: [`/api/events/${id}/registration-status`],
     enabled: isAuthenticated,
     retry: false,
@@ -44,23 +77,26 @@ export function EventCard({
 
   const isRegistered = registrationStatus?.isRegistered || false;
 
-  // Update count when registrationStatus changes
+  // Update local attendee count when registrationStatus changes from the server
+  // This ensures the UI reflects the latest count after registration actions
   useEffect(() => {
     if (registrationStatus?.attendeeCount !== undefined) {
       setCurrentAttendeeCount(registrationStatus.attendeeCount);
     }
   }, [registrationStatus]);
 
+  // Mutation to register the user for the event
   const registerMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", `/api/events/${id}/register`, {});
-      return response.json();
+      return response.json() as Promise<RegisterResponse>;
     },
     onSuccess: (data) => {
       toast({
         title: "Success!",
         description: data.message || "You're registered for this event",
       });
+      // Update local state and invalidate queries to refresh data
       setCurrentAttendeeCount(data.attendeeCount);
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/registration-status`] });
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
@@ -74,16 +110,18 @@ export function EventCard({
     },
   });
 
+  // Mutation to unregister the user from the event
   const unregisterMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("DELETE", `/api/events/${id}/register`, {});
-      return response.json();
+      return response.json() as Promise<RegisterResponse>;
     },
     onSuccess: (data) => {
       toast({
         title: "Unregistered",
         description: data.message || "You've been unregistered from this event",
       });
+      // Update local state and invalidate queries to refresh data
       setCurrentAttendeeCount(data.attendeeCount);
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/registration-status`] });
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });

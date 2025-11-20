@@ -24,6 +24,7 @@ export function Header() {
     { href: "/events", label: "Events" },
     { href: "/blog", label: "Blog" },
     { href: "/gallery", label: "Gallery" },
+    { href: "/discussion", label: "Discussion" },
     { href: "/contact", label: "Contact" },
   ];
 
@@ -36,9 +37,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
-              B
-            </div>
+            <img src="/bitsa_logo.jpg" alt="BITSA" className="h-10 w-10 rounded-md object-cover" />
             <span className="hidden font-bold text-xl sm:inline-block">BITSA</span>
           </Link>
 

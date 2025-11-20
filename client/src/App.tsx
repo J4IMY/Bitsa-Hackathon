@@ -15,6 +15,8 @@ import Contact from "@/pages/Contact";
 import Admin from "@/pages/Admin";
 import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
+import Discussion from "@/pages/Discussion";
+import DiscussionDetail from "@/pages/DiscussionDetail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -32,6 +34,8 @@ function Router() {
           <Route path="/admin" component={Admin} />
           <Route path="/auth" component={Auth} />
           <Route path="/profile" component={Profile} />
+          <Route path="/discussion" component={Discussion} />
+          <Route path="/discussion/:id" component={DiscussionDetail} />
           <Route component={NotFound} />
         </Switch>
       </main>
