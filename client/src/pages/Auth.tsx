@@ -221,8 +221,8 @@ export default function Auth() {
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 bg-gradient-to-br from-background via-background to-muted/20">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
-                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-2xl mb-4 shadow-lg">
-                        B
+                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-xl bg-primary mb-4 shadow-lg">
+                        <img src="/bitsa_logo.jpg" alt="BITSA Logo" className="h-full w-full object-cover rounded-xl" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">Welcome to BITSA</h1>
                     <p className="text-muted-foreground mt-2">Bachelor of IT Students Association</p>
@@ -291,22 +291,7 @@ export default function Auth() {
                                     <Button type="submit" className="w-full" disabled={isLoading}>
                                         {isLoading ? "Logging in..." : "Login"}
                                     </Button>
-                                    <div className="relative w-full">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <span className="w-full border-t" />
-                                        </div>
-                                        <div className="relative flex justify-center text-xs uppercase">
-                                            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="w-full"
-                                        onClick={() => window.location.href = "/api/login"}
-                                    >
-                                        Replit Auth
-                                    </Button>
+
                                 </CardFooter>
                             </form>
                         </Card>
